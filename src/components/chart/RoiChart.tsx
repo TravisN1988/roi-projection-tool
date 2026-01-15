@@ -18,14 +18,6 @@ interface RoiChartProps {
 }
 
 export function RoiChart({ data, breakEvenMonth }: RoiChartProps) {
-  // Get CSS variable values for chart colors
-  const getColor = (varName: string) => {
-    return getComputedStyle(document.documentElement).getPropertyValue(varName).trim();
-  };
-
-  // Custom tooltip formatter
-  const formatTooltipValue = (value: number) => formatCurrency(value);
-
   // X-axis ticks every 6 months
   const xTicks = [0, 6, 12, 18, 24, 30, 36, 42, 48, 54, 60];
 
@@ -74,7 +66,7 @@ export function RoiChart({ data, breakEvenMonth }: RoiChartProps) {
               width={70}
             />
             <Tooltip
-              formatter={formatTooltipValue}
+              formatter={(value) => formatCurrency(value as number)}
               labelFormatter={(label) => `Month ${label}`}
               contentStyle={{
                 backgroundColor: 'var(--color-bg-secondary)',
