@@ -41,7 +41,8 @@ export interface RoiInputs {
   operatingDaysPerYear: number;
 
   // Labor Savings
-  burdenedRate: number;
+  baseWage: number; // Base hourly wage before burden
+  burdenMultiplier: number; // Multiplier for benefits/taxes (default 1.35)
   laborUnitsReduced: number;
 
   // Capacity Benefit
@@ -138,7 +139,8 @@ export const DEFAULT_INPUTS: RoiInputs = {
   shiftsPerDay: 3,
   hoursPerShift: 8,
   operatingDaysPerYear: 320,
-  burdenedRate: 40,
+  baseWage: 22.48, // BLS Food Manufacturing (NAICS 311) avg hourly earnings
+  burdenMultiplier: 1.35, // Standard burden rate for benefits/taxes
   laborUnitsReduced: 2,
   baselineUnitsPerHour: 1600,
   proposedUnitsPerHour: 1650,

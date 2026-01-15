@@ -12,9 +12,12 @@ export function calculateLaborSavings(inputs: RoiInputs): LaborSavingsResult {
     inputs.hoursPerShift *
     inputs.operatingDaysPerYear;
 
+  // Burdened Rate = Base Wage × Burden Multiplier
+  const burdenedRate = inputs.baseWage * inputs.burdenMultiplier;
+
   // Annual Labor Savings = Hours Saved × Burdened Rate
   // Excel: B10 = $B$9*$B$4
-  const annualSavings = annualHoursSaved * inputs.burdenedRate;
+  const annualSavings = annualHoursSaved * burdenedRate;
 
   // Monthly Labor Savings = Annual / 12
   // Excel: B11 = $B$10/12

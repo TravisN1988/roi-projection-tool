@@ -8,6 +8,7 @@ import { AppShell } from './components/layout';
 import { InputPanel } from './components/inputs';
 import { OutputPanel } from './components/outputs';
 import { RoiChart } from './components/chart';
+import { DataSources } from './components/DataSources';
 
 // Migration: Check if stored data has old structure and needs migration
 function migrateStoredInputs(stored: unknown): RoiInputs {
@@ -39,6 +40,20 @@ function migrateStoredInputs(stored: unknown): RoiInputs {
       localStorage.removeItem('roi-inputs');
       return DEFAULT_INPUTS;
     }
+  }
+
+  // Migrate old burdenedRate to new baseWage + burdenMultiplier structure
+  if ('burdenedRate' in data && !('baseWage' in data)) {
+    console.log('Migrating burdenedRate to baseWage + burdenMultiplier');
+    const burdenedRate = data.burdenedRate as number;
+    // Reverse engineer: assume 1.35 multiplier to get base wage
+    const baseWage = burdenedRate / 1.35;
+    return {
+      ...DEFAULT_INPUTS,
+      ...data,
+      baseWage: Math.round(baseWage * 100) / 100,
+      burdenMultiplier: 1.35,
+    } as RoiInputs;
   }
 
   // Data looks valid, return it (with defaults for any missing fields)
@@ -149,6 +164,7 @@ function App() {
             onDelayChange={setDelayMonths}
           />
           <RoiChart data={shiftedChartData} breakEvenMonth={shiftedBreakEvenMonth} />
+          <DataSources />
         </div>
       </div>
     </AppShell>
