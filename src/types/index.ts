@@ -1,17 +1,39 @@
 // ROI Projection Tool - Type Definitions
 // Based on ROI_Model_R1.xlsx canonical model
 
-export interface Milestone {
+// Optional milestone (0-4 can be added between downpayment and pre-shipment)
+export interface OptionalMilestone {
+  id: string;
   name: string;
-  percentage: number; // 0-1 (e.g., 0.4 for 40%)
-  month: number; // Can be decimal, rounded in calculation
+  percentage: number; // 0-1 (e.g., 0.2 for 20%)
+  month: number;
+}
+
+// Payment terms for final payment
+export type FinalPaymentTerms = 30 | 60;
+
+// Payment schedule structure
+export interface PaymentSchedule {
+  // Fixed: Downpayment at order (month 0)
+  downpaymentPercent: number; // Default 40%
+
+  // Optional: 0-4 additional milestones between order and pre-shipment
+  optionalMilestones: OptionalMilestone[];
+
+  // Fixed: Pre-shipment payment
+  preShipmentPercent: number;
+  preShipmentMonth: number;
+
+  // Fixed: Final payment (Net 30 or 60 from commissioning)
+  finalPaymentPercent: number;
+  finalPaymentTerms: FinalPaymentTerms; // 30 or 60 days
 }
 
 export interface RoiInputs {
   // CAPEX
   equipmentCost: number;
   installationCost: number;
-  milestones: Milestone[];
+  paymentSchedule: PaymentSchedule;
 
   // Operating Profile
   shiftsPerDay: number;
@@ -102,13 +124,17 @@ export interface RoiOutputs {
 export const DEFAULT_INPUTS: RoiInputs = {
   equipmentCost: 1139475,
   installationCost: 76200,
-  milestones: [
-    { name: 'Order / Downpayment', percentage: 0.40, month: 0 },
-    { name: 'Engineered Drawings Approved', percentage: 0.20, month: 2.8 },
-    { name: 'Progress Milestone (24 weeks)', percentage: 0.15, month: 5.5 },
-    { name: 'Prior to Shipment', percentage: 0.15, month: 6.9 },
-    { name: 'Final Acceptance (Net 30)', percentage: 0.10, month: 8.8 },
-  ],
+  paymentSchedule: {
+    downpaymentPercent: 0.40,
+    optionalMilestones: [
+      { id: '1', name: 'Engineered Drawings Approved', percentage: 0.20, month: 2.8 },
+      { id: '2', name: 'Progress Milestone (24 weeks)', percentage: 0.15, month: 5.5 },
+    ],
+    preShipmentPercent: 0.15,
+    preShipmentMonth: 6.9,
+    finalPaymentPercent: 0.10,
+    finalPaymentTerms: 30,
+  },
   shiftsPerDay: 3,
   hoursPerShift: 8,
   operatingDaysPerYear: 320,
@@ -122,4 +148,9 @@ export const DEFAULT_INPUTS: RoiInputs = {
   lostProductionCost: 34000,
   lostProductionMonth: 8,
   annualDiscountRate: 0.12,
+};
+
+// Helper to generate unique ID for new milestones
+export const generateMilestoneId = (): string => {
+  return Math.random().toString(36).substring(2, 9);
 };

@@ -5,12 +5,48 @@ import type { RoiInputs, MonthlyCashflow, LaborSavingsResult, CapacityBenefitRes
 
 const ANALYSIS_HORIZON = 60; // Months 0-60
 
+// Helper to build all payment milestones from the new structure
+function buildPaymentMilestones(inputs: RoiInputs): { month: number; percentage: number }[] {
+  const { paymentSchedule, commissioningMonth } = inputs;
+  const milestones: { month: number; percentage: number }[] = [];
+
+  // 1. Downpayment at month 0
+  milestones.push({
+    month: 0,
+    percentage: paymentSchedule.downpaymentPercent,
+  });
+
+  // 2. Optional milestones
+  for (const m of paymentSchedule.optionalMilestones) {
+    milestones.push({
+      month: m.month,
+      percentage: m.percentage,
+    });
+  }
+
+  // 3. Pre-shipment payment
+  milestones.push({
+    month: paymentSchedule.preShipmentMonth,
+    percentage: paymentSchedule.preShipmentPercent,
+  });
+
+  // 4. Final payment (Net 30 or 60 from commissioning)
+  const finalPaymentMonth = commissioningMonth + (paymentSchedule.finalPaymentTerms / 30);
+  milestones.push({
+    month: finalPaymentMonth,
+    percentage: paymentSchedule.finalPaymentPercent,
+  });
+
+  return milestones;
+}
+
 export function generateMonthlyCashflows(
   inputs: RoiInputs,
   laborSavings: LaborSavingsResult,
   capacityBenefit: CapacityBenefitResult
 ): MonthlyCashflow[] {
   const cashflows: MonthlyCashflow[] = [];
+  const milestones = buildPaymentMilestones(inputs);
 
   let cumulativeCosts = 0;
   let cumulativeBenefits = 0;
@@ -20,7 +56,7 @@ export function generateMonthlyCashflows(
     // CAPEX Out: sum of milestones hitting this month + installation cost
     // Excel: =SUMPRODUCT(--(ROUND(CAPEX_Inputs!$D$11:$D$15,0)=A5),CAPEX_Inputs!$C$11:$C$15)
     //        +IF(A5=CAPEX_Inputs!$B$22,CAPEX_Inputs!$B$21,0)
-    let capexOut = inputs.milestones
+    let capexOut = milestones
       .filter((m) => Math.round(m.month) === month)
       .reduce((sum, m) => sum + inputs.equipmentCost * m.percentage, 0);
 
