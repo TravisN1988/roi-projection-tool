@@ -1,5 +1,5 @@
-import { useCallback, useEffect } from 'react';
-import type { RoiInputs } from './types';
+import { useCallback, useEffect, useState, useMemo } from 'react';
+import type { RoiInputs, ChartDataPoint } from './types';
 import { DEFAULT_INPUTS } from './types';
 import { useTheme } from './hooks/useTheme';
 import { useLocalStorage } from './hooks/useLocalStorage';
@@ -70,6 +70,50 @@ function App() {
 
   const outputs = useRoiCalculation(inputs);
 
+  // Delay state for opportunity cost visualization
+  const [delayMonths, setDelayMonths] = useState(0);
+
+  // Shift chart data by delay months
+  const shiftedChartData = useMemo((): ChartDataPoint[] => {
+    if (delayMonths === 0) return outputs.chartData;
+
+    // Create shifted data: months 0 to delayMonths-1 have zero values,
+    // then the original data starts at month delayMonths
+    const shifted: ChartDataPoint[] = [];
+
+    // Add zero-value months for the delay period
+    for (let i = 0; i < delayMonths; i++) {
+      shifted.push({
+        month: i,
+        cumulativeCosts: 0,
+        cumulativeBenefits: 0,
+        cumulativeNet: 0,
+      });
+    }
+
+    // Add the original data shifted by delayMonths
+    for (const point of outputs.chartData) {
+      const newMonth = point.month + delayMonths;
+      if (newMonth <= 60) {
+        shifted.push({
+          month: newMonth,
+          cumulativeCosts: point.cumulativeCosts,
+          cumulativeBenefits: point.cumulativeBenefits,
+          cumulativeNet: point.cumulativeNet,
+        });
+      }
+    }
+
+    return shifted;
+  }, [outputs.chartData, delayMonths]);
+
+  // Shift break-even month by delay
+  const shiftedBreakEvenMonth = useMemo(() => {
+    if (outputs.breakEvenProjectMonth === null) return null;
+    const shifted = outputs.breakEvenProjectMonth + delayMonths;
+    return shifted <= 60 ? shifted : null;
+  }, [outputs.breakEvenProjectMonth, delayMonths]);
+
   const handleInputChange = useCallback(<K extends keyof RoiInputs>(
     key: K,
     value: RoiInputs[K]
@@ -98,8 +142,13 @@ function App() {
 
         {/* Right Panel - Outputs & Chart */}
         <div className="space-y-4">
-          <OutputPanel outputs={outputs} commissioningMonth={inputs.commissioningMonth} />
-          <RoiChart data={outputs.chartData} breakEvenMonth={outputs.breakEvenProjectMonth} />
+          <OutputPanel
+            outputs={outputs}
+            commissioningMonth={inputs.commissioningMonth}
+            delayMonths={delayMonths}
+            onDelayChange={setDelayMonths}
+          />
+          <RoiChart data={shiftedChartData} breakEvenMonth={shiftedBreakEvenMonth} />
         </div>
       </div>
     </AppShell>

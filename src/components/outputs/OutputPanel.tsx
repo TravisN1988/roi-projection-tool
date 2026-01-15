@@ -6,9 +6,11 @@ import { OpportunityCostSection } from './OpportunityCostSection';
 interface OutputPanelProps {
   outputs: RoiOutputs;
   commissioningMonth: number;
+  delayMonths: number;
+  onDelayChange: (months: number) => void;
 }
 
-export function OutputPanel({ outputs, commissioningMonth }: OutputPanelProps) {
+export function OutputPanel({ outputs, commissioningMonth, delayMonths, onDelayChange }: OutputPanelProps) {
   const breakEvenDisplay = outputs.breakEvenProjectMonth !== null
     ? outputs.breakEvenProjectMonth.toString()
     : '—';
@@ -46,7 +48,11 @@ export function OutputPanel({ outputs, commissioningMonth }: OutputPanelProps) {
         />
       </div>
 
-      <OpportunityCostSection monthlyOperatingMargin={outputs.monthlyOperatingMargin} />
+      <OpportunityCostSection
+        monthlyOperatingMargin={outputs.monthlyOperatingMargin}
+        delayMonths={delayMonths}
+        onDelayChange={onDelayChange}
+      />
 
       <MonthlyMargin
         laborSavings={outputs.monthlyLaborSavings}

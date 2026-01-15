@@ -1,13 +1,16 @@
-import { useState } from 'react';
 import { formatCurrency } from '../../utils/format';
 
 interface OpportunityCostSectionProps {
   monthlyOperatingMargin: number;
+  delayMonths: number;
+  onDelayChange: (months: number) => void;
 }
 
-export function OpportunityCostSection({ monthlyOperatingMargin }: OpportunityCostSectionProps) {
-  const [delayMonths, setDelayMonths] = useState(0);
-
+export function OpportunityCostSection({
+  monthlyOperatingMargin,
+  delayMonths,
+  onDelayChange,
+}: OpportunityCostSectionProps) {
   // Lost revenue = months delayed × monthly benefit foregone
   const lostRevenue = delayMonths * monthlyOperatingMargin;
 
@@ -31,7 +34,7 @@ export function OpportunityCostSection({ monthlyOperatingMargin }: OpportunityCo
             max={18}
             step={1}
             value={delayMonths}
-            onChange={(e) => setDelayMonths(Number(e.target.value))}
+            onChange={(e) => onDelayChange(Number(e.target.value))}
             className="w-full h-2 rounded-lg appearance-none cursor-pointer accent-[var(--color-accent)]"
             style={{
               background: `linear-gradient(to right, var(--color-accent) 0%, var(--color-accent) ${(delayMonths / 18) * 100}%, var(--color-bg-tertiary) ${(delayMonths / 18) * 100}%, var(--color-bg-tertiary) 100%)`,
