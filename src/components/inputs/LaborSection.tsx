@@ -79,6 +79,17 @@ export function LaborSection({ inputs, onInputChange }: LaborSectionProps) {
           onChange={(v) => onInputChange('laborUnitsReduced', v)}
           decimals={1}
           min={0}
+          tooltip={
+            <>
+              <strong className="text-[var(--color-text-primary)]">Default: 2 units</strong>
+              <p className="mt-1">
+                Number of full-time equivalent (FTE) labor positions eliminated per shift due to automation.
+              </p>
+              <p className="mt-1 text-[var(--color-text-muted)]">
+                Example: If automation allows you to run with 2 fewer workers per shift, enter 2.
+              </p>
+            </>
+          }
         />
       </div>
 

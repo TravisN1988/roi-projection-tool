@@ -84,15 +84,13 @@ export function NumberInput({
 
   return (
     <div className={`flex flex-col gap-1 ${className}`}>
-      {label && (
-        <label className="text-sm text-[var(--color-text-secondary)]">
-          {tooltip ? (
-            <Tooltip content={tooltip}>{label}</Tooltip>
-          ) : (
-            label
-          )}
-        </label>
-      )}
+      <label className={`text-sm text-[var(--color-text-secondary)] ${!label ? 'hidden' : ''}`}>
+        {tooltip ? (
+          <Tooltip content={tooltip}>{label}</Tooltip>
+        ) : (
+          label
+        )}
+      </label>
       <div className="relative">
         <input
           ref={inputRef}
