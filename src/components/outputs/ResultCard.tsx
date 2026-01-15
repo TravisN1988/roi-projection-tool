@@ -1,0 +1,43 @@
+interface ResultCardProps {
+  label: string;
+  value: string | number;
+  sublabel?: string;
+  variant?: 'default' | 'success' | 'warning' | 'neutral';
+  size?: 'normal' | 'large';
+}
+
+export function ResultCard({
+  label,
+  value,
+  sublabel,
+  variant = 'default',
+  size = 'normal',
+}: ResultCardProps) {
+  const variantStyles = {
+    default: 'text-[var(--color-accent)]',
+    success: 'text-[var(--color-benefit)]',
+    warning: 'text-[var(--color-cost)]',
+    neutral: 'text-[var(--color-text-primary)]',
+  };
+
+  const sizeStyles = {
+    normal: 'text-3xl',
+    large: 'text-4xl',
+  };
+
+  return (
+    <div className="card p-4 flex flex-col items-center justify-center text-center min-h-[120px]">
+      <div className="text-xs text-[var(--color-text-secondary)] uppercase tracking-wide mb-1">
+        {label}
+      </div>
+      <div className={`font-bold result-value ${sizeStyles[size]} ${variantStyles[variant]}`}>
+        {value}
+      </div>
+      {sublabel && (
+        <div className="text-xs text-[var(--color-text-muted)] mt-1">
+          {sublabel}
+        </div>
+      )}
+    </div>
+  );
+}
