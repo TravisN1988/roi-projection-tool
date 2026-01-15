@@ -88,16 +88,19 @@ export function CapexSection({ inputs, onInputChange }: CapexSectionProps) {
               <span className="text-sm font-medium text-[var(--color-text-primary)]">Downpayment at Order</span>
               <span className="text-xs text-[var(--color-text-muted)]">(Month 0)</span>
             </div>
-            <div className="w-24">
-              <NumberInput
-                label=""
-                value={paymentSchedule.downpaymentPercent}
-                onChange={(v) => updateSchedule({ downpaymentPercent: v })}
-                type="percent"
-                min={0}
-                max={1}
-                className="[&>div:first-child]:hidden"
-              />
+            <div className="flex items-center gap-1">
+              <div className="w-20">
+                <NumberInput
+                  label=""
+                  value={paymentSchedule.downpaymentPercent}
+                  onChange={(v) => updateSchedule({ downpaymentPercent: v })}
+                  type="percent"
+                  min={0}
+                  max={1}
+                  className="[&>div:first-child]:hidden"
+                />
+              </div>
+              <span className="text-sm text-[var(--color-text-muted)]">%</span>
             </div>
           </div>
         </div>
@@ -145,16 +148,19 @@ export function CapexSection({ inputs, onInputChange }: CapexSectionProps) {
             <span className="text-sm font-medium text-[var(--color-text-primary)] flex-shrink-0">
               Pre-Shipment
             </span>
-            <div className="w-24">
-              <NumberInput
-                label=""
-                value={paymentSchedule.preShipmentPercent}
-                onChange={(v) => updateSchedule({ preShipmentPercent: v })}
-                type="percent"
-                min={0}
-                max={1}
-                className="[&>div:first-child]:hidden"
-              />
+            <div className="flex items-center gap-1">
+              <div className="w-20">
+                <NumberInput
+                  label=""
+                  value={paymentSchedule.preShipmentPercent}
+                  onChange={(v) => updateSchedule({ preShipmentPercent: v })}
+                  type="percent"
+                  min={0}
+                  max={1}
+                  className="[&>div:first-child]:hidden"
+                />
+              </div>
+              <span className="text-sm text-[var(--color-text-muted)]">%</span>
             </div>
             <span className="text-xs text-[var(--color-text-muted)]">Mo:</span>
             <div className="w-20">
@@ -177,16 +183,19 @@ export function CapexSection({ inputs, onInputChange }: CapexSectionProps) {
             <span className="text-sm font-medium text-[var(--color-text-primary)] flex-shrink-0">
               Final Payment
             </span>
-            <div className="w-24">
-              <NumberInput
-                label=""
-                value={paymentSchedule.finalPaymentPercent}
-                onChange={(v) => updateSchedule({ finalPaymentPercent: v })}
-                type="percent"
-                min={0}
-                max={1}
-                className="[&>div:first-child]:hidden"
-              />
+            <div className="flex items-center gap-1">
+              <div className="w-20">
+                <NumberInput
+                  label=""
+                  value={paymentSchedule.finalPaymentPercent}
+                  onChange={(v) => updateSchedule({ finalPaymentPercent: v })}
+                  type="percent"
+                  min={0}
+                  max={1}
+                  className="[&>div:first-child]:hidden"
+                />
+              </div>
+              <span className="text-sm text-[var(--color-text-muted)]">%</span>
             </div>
             <div className="flex items-center gap-2">
               <span className="text-xs text-[var(--color-text-muted)]">Net</span>
@@ -245,16 +254,19 @@ function OptionalMilestoneRow({
         className="flex-1 h-8 px-2 text-sm rounded-md min-w-0"
         placeholder="Milestone name"
       />
-      <div className="w-20">
-        <NumberInput
-          label=""
-          value={milestone.percentage}
-          onChange={onPercentageChange}
-          type="percent"
-          min={0}
-          max={1}
-          className="[&>div:first-child]:hidden"
-        />
+      <div className="flex items-center gap-1">
+        <div className="w-16">
+          <NumberInput
+            label=""
+            value={milestone.percentage}
+            onChange={onPercentageChange}
+            type="percent"
+            min={0}
+            max={1}
+            className="[&>div:first-child]:hidden"
+          />
+        </div>
+        <span className="text-sm text-[var(--color-text-muted)]">%</span>
       </div>
       <span className="text-xs text-[var(--color-text-muted)]">Mo:</span>
       <div className="w-16">
