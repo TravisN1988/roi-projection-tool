@@ -28,6 +28,22 @@ export function LaborSection({ inputs, onInputChange }: LaborSectionProps) {
               type="currency"
               decimals={2}
               min={0}
+              tooltip={
+                <>
+                  <strong className="text-[var(--color-text-primary)]">Default: $22.48/hr</strong>
+                  <p className="mt-1">
+                    Source: U.S. Bureau of Labor Statistics, Food Manufacturing (NAICS 311) average hourly earnings.
+                  </p>
+                  <a
+                    href="https://www.bls.gov/iag/tgs/iag311.htm"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-[var(--color-accent)] hover:underline mt-1 inline-block"
+                  >
+                    View BLS Data →
+                  </a>
+                </>
+              }
             />
             <NumberInput
               label="Burden Multiplier"
@@ -36,6 +52,17 @@ export function LaborSection({ inputs, onInputChange }: LaborSectionProps) {
               decimals={2}
               min={1}
               max={3}
+              tooltip={
+                <>
+                  <strong className="text-[var(--color-text-primary)]">Default: 1.35×</strong>
+                  <p className="mt-1">
+                    Accounts for employer costs beyond wages: payroll taxes (FICA, unemployment), health insurance, retirement contributions, and other benefits.
+                  </p>
+                  <p className="mt-1 text-[var(--color-text-muted)]">
+                    Typical range: 1.25× – 1.40×
+                  </p>
+                </>
+              }
             />
           </div>
           <div className="text-xs text-[var(--color-text-muted)] flex items-center justify-between px-1">

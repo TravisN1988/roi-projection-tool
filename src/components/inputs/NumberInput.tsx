@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { formatCurrency, formatNumber, parseCurrency, parseNumber } from '../../utils/format';
+import { Tooltip } from '../Tooltip';
 
 interface NumberInputProps {
   label: string;
@@ -12,6 +13,7 @@ interface NumberInputProps {
   suffix?: string;
   decimals?: number;
   className?: string;
+  tooltip?: React.ReactNode;
 }
 
 export function NumberInput({
@@ -25,6 +27,7 @@ export function NumberInput({
   suffix,
   decimals = 0,
   className = '',
+  tooltip,
 }: NumberInputProps) {
   const [displayValue, setDisplayValue] = useState('');
   const [isFocused, setIsFocused] = useState(false);
@@ -81,7 +84,15 @@ export function NumberInput({
 
   return (
     <div className={`flex flex-col gap-1 ${className}`}>
-      <label className="text-sm text-[var(--color-text-secondary)]">{label}</label>
+      {label && (
+        <label className="text-sm text-[var(--color-text-secondary)]">
+          {tooltip ? (
+            <Tooltip content={tooltip}>{label}</Tooltip>
+          ) : (
+            label
+          )}
+        </label>
+      )}
       <div className="relative">
         <input
           ref={inputRef}
