@@ -6,7 +6,7 @@ import { useLocalStorage } from './hooks/useLocalStorage';
 import { useRoiCalculation } from './hooks/useRoiCalculation';
 import { AppShell } from './components/layout';
 import { InputPanel } from './components/inputs';
-import { OutputPanel, OpportunityCostSection } from './components/outputs';
+import { OutputPanel } from './components/outputs';
 import { RoiChart } from './components/chart';
 
 // Migration: Check if stored data has old structure and needs migration
@@ -97,10 +97,9 @@ function App() {
         </div>
 
         {/* Right Panel - Outputs & Chart */}
-        <div className="space-y-6">
+        <div className="space-y-4">
           <OutputPanel outputs={outputs} commissioningMonth={inputs.commissioningMonth} />
           <RoiChart data={outputs.chartData} breakEvenMonth={outputs.breakEvenProjectMonth} />
-          <OpportunityCostSection monthlyOperatingMargin={outputs.monthlyOperatingMargin} />
         </div>
       </div>
     </AppShell>

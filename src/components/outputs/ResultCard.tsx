@@ -21,20 +21,20 @@ export function ResultCard({
   };
 
   const sizeStyles = {
-    normal: 'text-3xl',
-    large: 'text-4xl',
+    normal: 'text-2xl',
+    large: 'text-3xl',
   };
 
   return (
-    <div className="card p-4 flex flex-col items-center justify-center text-center min-h-[120px]">
-      <div className="text-xs text-[var(--color-text-secondary)] uppercase tracking-wide mb-1">
+    <div className="card p-3 flex flex-col items-center justify-center text-center min-h-[80px]">
+      <div className="text-[10px] text-[var(--color-text-secondary)] uppercase tracking-wide mb-0.5">
         {label}
       </div>
       <div className={`font-bold result-value ${sizeStyles[size]} ${variantStyles[variant]}`}>
         {value}
       </div>
       {sublabel && (
-        <div className="text-xs text-[var(--color-text-muted)] mt-1">
+        <div className="text-[10px] text-[var(--color-text-muted)] mt-0.5">
           {sublabel}
         </div>
       )}

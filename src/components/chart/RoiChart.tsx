@@ -22,10 +22,10 @@ export function RoiChart({ data, breakEvenMonth }: RoiChartProps) {
   const xTicks = [0, 6, 12, 18, 24, 30, 36, 42, 48, 54, 60];
 
   return (
-    <div className="card p-4">
-      <h3 className="section-header mb-4">ROI Projection</h3>
+    <div className="card p-3">
+      <h3 className="section-header mb-2">ROI Projection</h3>
 
-      <div className="h-[300px] md:h-[350px]">
+      <div className="h-[250px] md:h-[280px]">
         <ResponsiveContainer width="100%" height="100%">
           <LineChart
             data={data}

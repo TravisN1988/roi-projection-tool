@@ -12,18 +12,16 @@ export function OpportunityCostSection({ monthlyOperatingMargin }: OpportunityCo
   const lostRevenue = delayMonths * monthlyOperatingMargin;
 
   return (
-    <div className="card p-4">
-      <h3 className="section-header mb-4">Opportunity Cost of Delay</h3>
-
-      <div className="space-y-4">
-        {/* Slider */}
-        <div className="space-y-2">
-          <div className="flex items-center justify-between">
-            <span className="text-sm text-[var(--color-text-secondary)]">
-              Project Start Delay
+    <div className="card p-3">
+      <div className="flex items-center gap-6">
+        {/* Left: Title and slider */}
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center justify-between mb-1">
+            <span className="text-xs text-[var(--color-text-secondary)] uppercase tracking-wide">
+              Opportunity Cost of Delay
             </span>
-            <span className="text-sm font-medium text-[var(--color-text-primary)]">
-              {delayMonths} {delayMonths === 1 ? 'month' : 'months'}
+            <span className="text-xs font-medium text-[var(--color-text-primary)]">
+              {delayMonths} {delayMonths === 1 ? 'mo' : 'mos'}
             </span>
           </div>
 
@@ -40,36 +38,26 @@ export function OpportunityCostSection({ monthlyOperatingMargin }: OpportunityCo
             }}
           />
 
-          <div className="flex justify-between text-xs text-[var(--color-text-muted)]">
+          <div className="flex justify-between text-[10px] text-[var(--color-text-muted)] mt-0.5">
             <span>0</span>
             <span>6</span>
             <span>12</span>
-            <span>18</span>
+            <span>18 mo</span>
           </div>
         </div>
 
-        {/* Output */}
-        <div className="p-4 rounded-lg bg-[var(--color-bg-tertiary)] border border-[var(--color-border)]">
-          <div className="flex items-center justify-between">
-            <div>
-              <div className="text-sm text-[var(--color-text-secondary)]">
-                Revenue Lost Due to Delay
-              </div>
-              <div className="text-xs text-[var(--color-text-muted)] mt-1">
-                {delayMonths} mo × {formatCurrency(monthlyOperatingMargin)}/mo
-              </div>
-            </div>
-            <div className={`text-2xl font-semibold ${delayMonths > 0 ? 'text-[var(--color-cost)]' : 'text-[var(--color-text-primary)]'}`}>
-              {formatCurrency(lostRevenue)}
-            </div>
+        {/* Right: Output value */}
+        <div className="text-right flex-shrink-0">
+          <div className="text-[10px] text-[var(--color-text-muted)] uppercase tracking-wide">
+            Revenue Lost
+          </div>
+          <div className={`text-xl font-semibold ${delayMonths > 0 ? 'text-[var(--color-cost)]' : 'text-[var(--color-text-primary)]'}`}>
+            {formatCurrency(lostRevenue)}
+          </div>
+          <div className="text-[10px] text-[var(--color-text-muted)]">
+            {delayMonths} × {formatCurrency(monthlyOperatingMargin)}/mo
           </div>
         </div>
-
-        {/* Context note */}
-        <p className="text-xs text-[var(--color-text-muted)] italic">
-          This represents the cumulative monthly operating margin (labor savings + capacity benefit)
-          foregone by delaying project start.
-        </p>
       </div>
     </div>
   );

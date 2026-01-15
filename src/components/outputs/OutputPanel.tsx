@@ -1,6 +1,7 @@
 import type { RoiOutputs } from '../../types';
 import { ResultCard } from './ResultCard';
 import { MonthlyMargin } from './MonthlyMargin';
+import { OpportunityCostSection } from './OpportunityCostSection';
 
 interface OutputPanelProps {
   outputs: RoiOutputs;
@@ -23,8 +24,8 @@ export function OutputPanel({ outputs, commissioningMonth }: OutputPanelProps) {
       : 'neutral';
 
   return (
-    <div className="space-y-4">
-      <div className="grid grid-cols-3 gap-4">
+    <div className="space-y-3">
+      <div className="grid grid-cols-3 gap-3">
         <ResultCard
           label="Break-even"
           value={breakEvenDisplay}
@@ -44,6 +45,8 @@ export function OutputPanel({ outputs, commissioningMonth }: OutputPanelProps) {
           size="large"
         />
       </div>
+
+      <OpportunityCostSection monthlyOperatingMargin={outputs.monthlyOperatingMargin} />
 
       <MonthlyMargin
         laborSavings={outputs.monthlyLaborSavings}

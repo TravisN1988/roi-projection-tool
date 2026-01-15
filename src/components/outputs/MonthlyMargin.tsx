@@ -8,22 +8,23 @@ interface MonthlyMarginProps {
 
 export function MonthlyMargin({ laborSavings, capacityBenefit, totalMargin }: MonthlyMarginProps) {
   return (
-    <div className="card p-4 border-l-4 border-l-[var(--color-benefit)]">
-      <h3 className="section-header mb-3">Monthly Operating Margin</h3>
-
-      <div className="space-y-2">
-        <div className="flex justify-between text-sm">
-          <span className="text-[var(--color-text-secondary)]">Labor Savings</span>
-          <span className="result-value">{formatCurrency(laborSavings)}/mo</span>
-        </div>
-        <div className="flex justify-between text-sm">
-          <span className="text-[var(--color-text-secondary)]">Capacity Benefit</span>
-          <span className="result-value">{formatCurrency(capacityBenefit)}/mo</span>
-        </div>
-        <div className="border-t border-[var(--color-border)] my-2" />
-        <div className="flex justify-between font-semibold">
-          <span className="text-[var(--color-text-primary)]">Total Margin</span>
-          <span className="result-value text-[var(--color-benefit)]">
+    <div className="card p-3 border-l-4 border-l-[var(--color-benefit)]">
+      <div className="flex items-center justify-between gap-4">
+        <span className="text-xs text-[var(--color-text-secondary)] uppercase tracking-wide flex-shrink-0">
+          Monthly Operating Margin
+        </span>
+        <div className="flex items-center gap-4 text-sm">
+          <div className="flex items-center gap-1.5">
+            <span className="text-[var(--color-text-muted)]">Labor:</span>
+            <span className="result-value">{formatCurrency(laborSavings)}</span>
+          </div>
+          <span className="text-[var(--color-text-muted)]">+</span>
+          <div className="flex items-center gap-1.5">
+            <span className="text-[var(--color-text-muted)]">Capacity:</span>
+            <span className="result-value">{formatCurrency(capacityBenefit)}</span>
+          </div>
+          <span className="text-[var(--color-text-muted)]">=</span>
+          <span className="result-value text-[var(--color-benefit)] font-semibold">
             {formatCurrency(totalMargin)}/mo
           </span>
         </div>
