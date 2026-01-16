@@ -1,72 +1,43 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 
 interface EmailGateProps {
   onAccessGranted: () => void;
 }
 
-declare global {
-  interface Window {
-    hbspt?: {
-      forms: {
-        create: (config: {
-          region: string;
-          portalId: string;
-          formId: string;
-          target: string;
-          onFormSubmitted?: () => void;
-        }) => void;
-      };
-    };
-  }
-}
-
 export function EmailGate({ onAccessGranted }: EmailGateProps) {
-  const formContainerRef = useRef<HTMLDivElement>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [scriptLoaded, setScriptLoaded] = useState(false);
 
-  // Load HubSpot script
   useEffect(() => {
+    // Load HubSpot script
     const existingScript = document.querySelector('script[src*="hsforms"]');
-    if (existingScript) {
-      setScriptLoaded(true);
-      return;
+    if (!existingScript) {
+      const script = document.createElement('script');
+      script.src = 'https://js.hsforms.net/forms/embed/23263384.js';
+      script.defer = true;
+      document.head.appendChild(script);
     }
 
-    const script = document.createElement('script');
-    script.src = 'https://js.hsforms.net/forms/embed/23263384.js';
-    script.defer = true;
-    script.onload = () => setScriptLoaded(true);
-    document.head.appendChild(script);
+    // Listen for HubSpot form submission via postMessage
+    const handleMessage = (event: MessageEvent) => {
+      // HubSpot sends messages when form is submitted
+      if (event.data?.type === 'hsFormCallback' && event.data?.eventName === 'onFormSubmitted') {
+        localStorage.setItem('roi-email-submitted', 'true');
+        onAccessGranted();
+      }
+    };
+
+    window.addEventListener('message', handleMessage);
+
+    // Hide loading spinner after a short delay to allow form to render
+    const timer = setTimeout(() => {
+      setIsLoading(false);
+    }, 1500);
 
     return () => {
-      // Don't remove script on cleanup - HubSpot needs it
+      window.removeEventListener('message', handleMessage);
+      clearTimeout(timer);
     };
-  }, []);
-
-  // Create form once script is loaded
-  useEffect(() => {
-    if (!scriptLoaded || !formContainerRef.current) return;
-
-    // Small delay to ensure HubSpot is fully initialized
-    const timer = setTimeout(() => {
-      if (window.hbspt?.forms) {
-        window.hbspt.forms.create({
-          region: 'na1',
-          portalId: '23263384',
-          formId: 'c9d70c3d-fbd8-4fc2-af23-4ada6c298020',
-          target: '#hubspot-form-container',
-          onFormSubmitted: () => {
-            localStorage.setItem('roi-email-submitted', 'true');
-            onAccessGranted();
-          },
-        });
-        setIsLoading(false);
-      }
-    }, 100);
-
-    return () => clearTimeout(timer);
-  }, [scriptLoaded, onAccessGranted]);
+  }, [onAccessGranted]);
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-[var(--color-bg-primary)]">
@@ -87,10 +58,12 @@ export function EmailGate({ onAccessGranted }: EmailGateProps) {
             </div>
           )}
 
+          {/* HubSpot form embed using their data-attribute format */}
           <div
-            id="hubspot-form-container"
-            ref={formContainerRef}
-            className={isLoading ? 'hidden' : ''}
+            className={`hs-form-frame ${isLoading ? 'opacity-0 h-0' : 'opacity-100'}`}
+            data-region="na1"
+            data-form-id="c9d70c3d-fbd8-4fc2-af23-4ada6c298020"
+            data-portal-id="23263384"
           />
 
           <p className="text-xs text-[var(--color-text-muted)] text-center">
