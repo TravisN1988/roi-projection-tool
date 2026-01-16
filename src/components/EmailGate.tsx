@@ -40,21 +40,21 @@ export function EmailGate({ onAccessGranted }: EmailGateProps) {
   }, [onAccessGranted]);
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-[var(--color-bg-primary)]">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-100">
       <div className="w-full max-w-md mx-4">
-        <div className="card p-6 space-y-4">
+        <div className="bg-white rounded-xl shadow-lg p-6 space-y-4">
           <div className="text-center space-y-2">
-            <h1 className="text-2xl font-bold text-[var(--color-text-primary)]">
+            <h1 className="text-2xl font-bold text-slate-800">
               ROI Projection Tool
             </h1>
-            <p className="text-sm text-[var(--color-text-secondary)]">
+            <p className="text-sm text-slate-600">
               Enter your email to access the calculator
             </p>
           </div>
 
           {isLoading && (
             <div className="flex justify-center py-8">
-              <div className="w-8 h-8 border-2 border-[var(--color-accent)] border-t-transparent rounded-full animate-spin" />
+              <div className="w-8 h-8 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
             </div>
           )}
 
@@ -66,7 +66,7 @@ export function EmailGate({ onAccessGranted }: EmailGateProps) {
             data-portal-id="23263384"
           />
 
-          <p className="text-xs text-[var(--color-text-muted)] text-center">
+          <p className="text-xs text-slate-400 text-center">
             We respect your privacy. Your information will not be shared.
           </p>
         </div>
