@@ -59,10 +59,9 @@ export function EmailGate({ onAccessGranted }: EmailGateProps) {
     window.addEventListener('message', handleMessage);
 
     // Poll for submission text - HubSpot form is in an iframe so MutationObserver may not catch it
-    const checkForSubmission = () => {
+    const checkForSubmission = (): 'submitted' | 'not_submitted' => {
       // Check the entire page for "Form submitted" text
       const pageText = document.body.innerText || '';
-      console.log('Polling - page text sample:', pageText.substring(0, 200));
 
       if (
         pageText.includes('Form submitted') ||
@@ -71,47 +70,41 @@ export function EmailGate({ onAccessGranted }: EmailGateProps) {
         pageText.includes('we\'ll be in touch')
       ) {
         console.log('Detected submission via page text!');
-        grantAccess();
-        return true;
+        return 'submitted';
       }
 
       // Check iframes for submission indicators
       const iframes = document.querySelectorAll('iframe');
-      console.log('Found iframes:', iframes.length);
       for (const iframe of iframes) {
         try {
           const iframeDoc = iframe.contentDocument || iframe.contentWindow?.document;
           if (iframeDoc) {
             const iframeText = iframeDoc.body?.innerText || '';
-            console.log('Iframe text sample:', iframeText.substring(0, 100));
             if (
               iframeText.includes('Form submitted') ||
               iframeText.includes('Thank you')
             ) {
               console.log('Detected submission via iframe text!');
-              grantAccess();
-              return true;
+              return 'submitted';
             }
           }
-        } catch (e) {
-          console.log('Cross-origin iframe, cannot access');
+        } catch {
+          // Cross-origin iframe - expected
         }
       }
 
-      return false;
+      return 'not_submitted';
     };
 
     // Start polling after form has had time to load
     const pollInterval = setInterval(() => {
-      if (checkForSubmission()) {
+      const status = checkForSubmission();
+      if (status === 'submitted') {
+        // Show the continue button when form is submitted
+        setShowContinueButton(true);
         clearInterval(pollInterval);
       }
     }, 500);
-
-    // Show continue button as fallback after 5 seconds
-    const continueButtonTimer = setTimeout(() => {
-      setShowContinueButton(true);
-    }, 5000);
 
     // Hide loading spinner after a short delay
     const timer = setTimeout(() => {
@@ -123,7 +116,6 @@ export function EmailGate({ onAccessGranted }: EmailGateProps) {
       window.removeEventListener('message', handleMessage);
       clearInterval(pollInterval);
       clearTimeout(timer);
-      clearTimeout(continueButtonTimer);
     };
   }, [grantAccess]);
 
