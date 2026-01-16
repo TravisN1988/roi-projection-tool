@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 
 interface EmailGateProps {
   onAccessGranted: () => void;
@@ -6,6 +6,11 @@ interface EmailGateProps {
 
 export function EmailGate({ onAccessGranted }: EmailGateProps) {
   const [isLoading, setIsLoading] = useState(true);
+
+  const grantAccess = useCallback(() => {
+    localStorage.setItem('roi-email-submitted', 'true');
+    onAccessGranted();
+  }, [onAccessGranted]);
 
   useEffect(() => {
     // Load HubSpot script
@@ -19,14 +24,81 @@ export function EmailGate({ onAccessGranted }: EmailGateProps) {
 
     // Listen for HubSpot form submission via postMessage
     const handleMessage = (event: MessageEvent) => {
-      // HubSpot sends messages when form is submitted
-      if (event.data?.type === 'hsFormCallback' && event.data?.eventName === 'onFormSubmitted') {
-        localStorage.setItem('roi-email-submitted', 'true');
-        onAccessGranted();
+      // Log all messages for debugging (can remove later)
+      if (event.data && typeof event.data === 'object') {
+        console.log('HubSpot message:', event.data);
+      }
+
+      // Check various HubSpot event formats
+      const data = event.data;
+      if (data) {
+        // Format 1: hsFormCallback with onFormSubmitted
+        if (data.type === 'hsFormCallback' && data.eventName === 'onFormSubmitted') {
+          grantAccess();
+          return;
+        }
+        // Format 2: Direct event name check
+        if (data.eventName === 'onFormSubmitted' || data.eventName === 'onFormSubmit') {
+          grantAccess();
+          return;
+        }
+        // Format 3: Meeting/form submitted event
+        if (data.meetingBookSucceeded || data.formSubmitted) {
+          grantAccess();
+          return;
+        }
+        // Format 4: Check for submission in nested data
+        if (data.data?.eventName === 'onFormSubmitted') {
+          grantAccess();
+          return;
+        }
       }
     };
 
     window.addEventListener('message', handleMessage);
+
+    // Also watch for DOM changes - HubSpot often shows a thank you message after submission
+    const observer = new MutationObserver((mutations) => {
+      for (const mutation of mutations) {
+        if (mutation.type === 'childList') {
+          // Look for thank you message or submitted state
+          const container = document.querySelector('.hs-form-frame');
+          if (container) {
+            const thankYou = container.querySelector('.submitted-message, .hs-form-submitted, [data-form-submitted="true"]');
+            const iframe = container.querySelector('iframe');
+
+            // Check if iframe content indicates submission
+            if (iframe) {
+              try {
+                const iframeDoc = iframe.contentDocument || iframe.contentWindow?.document;
+                if (iframeDoc) {
+                  const submittedEl = iframeDoc.querySelector('.submitted-message, .hs-form-submitted');
+                  if (submittedEl) {
+                    grantAccess();
+                    return;
+                  }
+                }
+              } catch {
+                // Cross-origin iframe, can't access - this is expected
+              }
+            }
+
+            if (thankYou) {
+              grantAccess();
+              return;
+            }
+          }
+        }
+      }
+    });
+
+    // Start observing after a delay to let form load
+    const observerTimer = setTimeout(() => {
+      const formContainer = document.querySelector('.hs-form-frame');
+      if (formContainer) {
+        observer.observe(formContainer, { childList: true, subtree: true });
+      }
+    }, 2000);
 
     // Hide loading spinner after a short delay to allow form to render
     const timer = setTimeout(() => {
@@ -35,9 +107,11 @@ export function EmailGate({ onAccessGranted }: EmailGateProps) {
 
     return () => {
       window.removeEventListener('message', handleMessage);
+      observer.disconnect();
       clearTimeout(timer);
+      clearTimeout(observerTimer);
     };
-  }, [onAccessGranted]);
+  }, [grantAccess]);
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-100">
