@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 
 interface EmailGateProps {
   onAccessGranted: () => void;
@@ -6,8 +6,12 @@ interface EmailGateProps {
 
 export function EmailGate({ onAccessGranted }: EmailGateProps) {
   const [isLoading, setIsLoading] = useState(true);
+  const hasGrantedAccess = useRef(false);
 
   const grantAccess = useCallback(() => {
+    if (hasGrantedAccess.current) return; // Prevent multiple calls
+    hasGrantedAccess.current = true;
+    console.log('Granting access to ROI tool');
     localStorage.setItem('roi-email-submitted', 'true');
     onAccessGranted();
   }, [onAccessGranted]);
@@ -24,83 +28,89 @@ export function EmailGate({ onAccessGranted }: EmailGateProps) {
 
     // Listen for HubSpot form submission via postMessage
     const handleMessage = (event: MessageEvent) => {
-      // Log all messages for debugging (can remove later)
-      if (event.data && typeof event.data === 'object') {
-        console.log('HubSpot message:', event.data);
+      const data = event.data;
+      if (!data) return;
+
+      // Log for debugging
+      if (typeof data === 'object') {
+        console.log('postMessage received:', data);
       }
 
       // Check various HubSpot event formats
-      const data = event.data;
-      if (data) {
-        // Format 1: hsFormCallback with onFormSubmitted
-        if (data.type === 'hsFormCallback' && data.eventName === 'onFormSubmitted') {
-          grantAccess();
-          return;
-        }
-        // Format 2: Direct event name check
-        if (data.eventName === 'onFormSubmitted' || data.eventName === 'onFormSubmit') {
-          grantAccess();
-          return;
-        }
-        // Format 3: Meeting/form submitted event
-        if (data.meetingBookSucceeded || data.formSubmitted) {
-          grantAccess();
-          return;
-        }
-        // Format 4: Check for submission in nested data
-        if (data.data?.eventName === 'onFormSubmitted') {
-          grantAccess();
-          return;
-        }
+      if (data.type === 'hsFormCallback' && data.eventName === 'onFormSubmitted') {
+        grantAccess();
+        return;
+      }
+      if (data.eventName === 'onFormSubmitted' || data.eventName === 'onFormSubmit') {
+        grantAccess();
+        return;
+      }
+      if (data.meetingBookSucceeded || data.formSubmitted) {
+        grantAccess();
+        return;
+      }
+      if (data.data?.eventName === 'onFormSubmitted') {
+        grantAccess();
+        return;
       }
     };
 
     window.addEventListener('message', handleMessage);
 
-    // Also watch for DOM changes - HubSpot shows a thank you message after submission
-    const observer = new MutationObserver(() => {
-      const container = document.querySelector('.hs-form-frame');
-      if (container) {
-        // Check for text content indicating submission
-        const textContent = container.textContent || '';
-        if (
-          textContent.includes('Form submitted') ||
-          textContent.includes('Thank you') ||
-          textContent.includes('submitted successfully')
-        ) {
-          console.log('Detected form submission via text content');
-          grantAccess();
-          return;
-        }
+    // Poll for submission text - HubSpot form is in an iframe so MutationObserver may not catch it
+    const checkForSubmission = () => {
+      // Check the entire page for "Form submitted" text
+      const pageText = document.body.innerText || '';
+      if (
+        pageText.includes('Form submitted') ||
+        pageText.includes('Thank you, we\'ll be in touch')
+      ) {
+        console.log('Detected submission via page text');
+        grantAccess();
+        return true;
+      }
 
-        // Also check for common HubSpot submitted class names
-        const thankYou = container.querySelector('.submitted-message, .hs-form-submitted, [data-form-submitted="true"]');
-        if (thankYou) {
-          console.log('Detected form submission via DOM element');
-          grantAccess();
-          return;
+      // Check iframes for submission indicators
+      const iframes = document.querySelectorAll('iframe');
+      for (const iframe of iframes) {
+        try {
+          const iframeDoc = iframe.contentDocument || iframe.contentWindow?.document;
+          if (iframeDoc) {
+            const iframeText = iframeDoc.body?.innerText || '';
+            if (
+              iframeText.includes('Form submitted') ||
+              iframeText.includes('Thank you')
+            ) {
+              console.log('Detected submission via iframe text');
+              grantAccess();
+              return true;
+            }
+          }
+        } catch {
+          // Cross-origin iframe - expected
         }
       }
-    });
 
-    // Start observing after a delay to let form load
-    const observerTimer = setTimeout(() => {
-      const formContainer = document.querySelector('.hs-form-frame');
-      if (formContainer) {
-        observer.observe(formContainer, { childList: true, subtree: true });
+      return false;
+    };
+
+    // Start polling after form has had time to load
+    const pollInterval = setInterval(() => {
+      if (checkForSubmission()) {
+        clearInterval(pollInterval);
       }
-    }, 2000);
+    }, 500);
 
-    // Hide loading spinner after a short delay to allow form to render
+    // Hide loading spinner after a short delay
     const timer = setTimeout(() => {
       setIsLoading(false);
     }, 1500);
 
+    // Cleanup
     return () => {
       window.removeEventListener('message', handleMessage);
-      observer.disconnect();
+      clearInterval(pollInterval);
       clearTimeout(timer);
-      clearTimeout(observerTimer);
     };
   }, [grantAccess]);
 
