@@ -57,37 +57,28 @@ export function EmailGate({ onAccessGranted }: EmailGateProps) {
 
     window.addEventListener('message', handleMessage);
 
-    // Also watch for DOM changes - HubSpot often shows a thank you message after submission
-    const observer = new MutationObserver((mutations) => {
-      for (const mutation of mutations) {
-        if (mutation.type === 'childList') {
-          // Look for thank you message or submitted state
-          const container = document.querySelector('.hs-form-frame');
-          if (container) {
-            const thankYou = container.querySelector('.submitted-message, .hs-form-submitted, [data-form-submitted="true"]');
-            const iframe = container.querySelector('iframe');
+    // Also watch for DOM changes - HubSpot shows a thank you message after submission
+    const observer = new MutationObserver(() => {
+      const container = document.querySelector('.hs-form-frame');
+      if (container) {
+        // Check for text content indicating submission
+        const textContent = container.textContent || '';
+        if (
+          textContent.includes('Form submitted') ||
+          textContent.includes('Thank you') ||
+          textContent.includes('submitted successfully')
+        ) {
+          console.log('Detected form submission via text content');
+          grantAccess();
+          return;
+        }
 
-            // Check if iframe content indicates submission
-            if (iframe) {
-              try {
-                const iframeDoc = iframe.contentDocument || iframe.contentWindow?.document;
-                if (iframeDoc) {
-                  const submittedEl = iframeDoc.querySelector('.submitted-message, .hs-form-submitted');
-                  if (submittedEl) {
-                    grantAccess();
-                    return;
-                  }
-                }
-              } catch {
-                // Cross-origin iframe, can't access - this is expected
-              }
-            }
-
-            if (thankYou) {
-              grantAccess();
-              return;
-            }
-          }
+        // Also check for common HubSpot submitted class names
+        const thankYou = container.querySelector('.submitted-message, .hs-form-submitted, [data-form-submitted="true"]');
+        if (thankYou) {
+          console.log('Detected form submission via DOM element');
+          grantAccess();
+          return;
         }
       }
     });
