@@ -6,6 +6,7 @@ interface EmailGateProps {
 
 export function EmailGate({ onAccessGranted }: EmailGateProps) {
   const [isLoading, setIsLoading] = useState(true);
+  const [showContinueButton, setShowContinueButton] = useState(false);
   const hasGrantedAccess = useRef(false);
 
   const grantAccess = useCallback(() => {
@@ -61,33 +62,39 @@ export function EmailGate({ onAccessGranted }: EmailGateProps) {
     const checkForSubmission = () => {
       // Check the entire page for "Form submitted" text
       const pageText = document.body.innerText || '';
+      console.log('Polling - page text sample:', pageText.substring(0, 200));
+
       if (
         pageText.includes('Form submitted') ||
-        pageText.includes('Thank you, we\'ll be in touch')
+        pageText.includes('Thank you, we\'ll be in touch') ||
+        pageText.includes('Thank you,') ||
+        pageText.includes('we\'ll be in touch')
       ) {
-        console.log('Detected submission via page text');
+        console.log('Detected submission via page text!');
         grantAccess();
         return true;
       }
 
       // Check iframes for submission indicators
       const iframes = document.querySelectorAll('iframe');
+      console.log('Found iframes:', iframes.length);
       for (const iframe of iframes) {
         try {
           const iframeDoc = iframe.contentDocument || iframe.contentWindow?.document;
           if (iframeDoc) {
             const iframeText = iframeDoc.body?.innerText || '';
+            console.log('Iframe text sample:', iframeText.substring(0, 100));
             if (
               iframeText.includes('Form submitted') ||
               iframeText.includes('Thank you')
             ) {
-              console.log('Detected submission via iframe text');
+              console.log('Detected submission via iframe text!');
               grantAccess();
               return true;
             }
           }
-        } catch {
-          // Cross-origin iframe - expected
+        } catch (e) {
+          console.log('Cross-origin iframe, cannot access');
         }
       }
 
@@ -101,6 +108,11 @@ export function EmailGate({ onAccessGranted }: EmailGateProps) {
       }
     }, 500);
 
+    // Show continue button as fallback after 5 seconds
+    const continueButtonTimer = setTimeout(() => {
+      setShowContinueButton(true);
+    }, 5000);
+
     // Hide loading spinner after a short delay
     const timer = setTimeout(() => {
       setIsLoading(false);
@@ -111,6 +123,7 @@ export function EmailGate({ onAccessGranted }: EmailGateProps) {
       window.removeEventListener('message', handleMessage);
       clearInterval(pollInterval);
       clearTimeout(timer);
+      clearTimeout(continueButtonTimer);
     };
   }, [grantAccess]);
 
@@ -144,6 +157,16 @@ export function EmailGate({ onAccessGranted }: EmailGateProps) {
           <p className="text-xs text-slate-400 text-center">
             We respect your privacy. Your information will not be shared.
           </p>
+
+          {/* Fallback continue button that appears after form submission */}
+          {showContinueButton && (
+            <button
+              onClick={grantAccess}
+              className="w-full py-3 px-4 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors"
+            >
+              Continue to Calculator →
+            </button>
+          )}
         </div>
       </div>
     </div>
