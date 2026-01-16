@@ -9,6 +9,7 @@ import { InputPanel } from './components/inputs';
 import { OutputPanel } from './components/outputs';
 import { RoiChart } from './components/chart';
 import { DataSources } from './components/DataSources';
+import { EmailGate } from './components/EmailGate';
 
 // Migration: Check if stored data has old structure and needs migration
 function migrateStoredInputs(stored: unknown): RoiInputs {
@@ -63,6 +64,11 @@ function migrateStoredInputs(stored: unknown): RoiInputs {
 function App() {
   const { theme, toggleTheme } = useTheme();
   const [inputs, setInputs] = useLocalStorage<RoiInputs>('roi-inputs', DEFAULT_INPUTS);
+
+  // Email gate state
+  const [hasAccess, setHasAccess] = useState(() => {
+    return localStorage.getItem('roi-email-submitted') === 'true';
+  });
 
   // Run migration on mount
   useEffect(() => {
@@ -135,6 +141,11 @@ function App() {
   ) => {
     setInputs((prev) => ({ ...prev, [key]: value }));
   }, [setInputs]);
+
+  // Show email gate if user hasn't submitted their email
+  if (!hasAccess) {
+    return <EmailGate onAccessGranted={() => setHasAccess(true)} />;
+  }
 
   // Safety check: if inputs don't have paymentSchedule, reset to defaults
   if (!inputs.paymentSchedule) {
