@@ -8,14 +8,22 @@ export function EmailGate({ onAccessGranted }: EmailGateProps) {
   const [isLoading, setIsLoading] = useState(true);
   const [showContinueButton, setShowContinueButton] = useState(false);
   const hasGrantedAccess = useRef(false);
+  const formSubmitted = useRef(false);
 
   const grantAccess = useCallback(() => {
-    if (hasGrantedAccess.current) return; // Prevent multiple calls
+    if (hasGrantedAccess.current) return;
     hasGrantedAccess.current = true;
     console.log('Granting access to ROI tool');
     localStorage.setItem('roi-email-submitted', 'true');
     onAccessGranted();
   }, [onAccessGranted]);
+
+  const showButton = useCallback(() => {
+    if (formSubmitted.current) return;
+    formSubmitted.current = true;
+    console.log('Form submission detected - showing continue button');
+    setShowContinueButton(true);
+  }, []);
 
   useEffect(() => {
     // Load HubSpot script
@@ -27,86 +35,105 @@ export function EmailGate({ onAccessGranted }: EmailGateProps) {
       document.head.appendChild(script);
     }
 
-    // Listen for HubSpot form submission via postMessage
+    // Listen for HubSpot form submission via postMessage (primary method)
     const handleMessage = (event: MessageEvent) => {
       const data = event.data;
-      if (!data) return;
+      if (!data || typeof data !== 'object') return;
 
-      // Log for debugging
-      if (typeof data === 'object') {
-        console.log('postMessage received:', data);
+      // Log all HubSpot-related messages for debugging
+      if (data.type === 'hsFormCallback' || data.eventName || data.meetingBookSucceeded !== undefined) {
+        console.log('HubSpot message received:', JSON.stringify(data, null, 2));
       }
 
-      // Check various HubSpot event formats
-      if (data.type === 'hsFormCallback' && data.eventName === 'onFormSubmitted') {
-        grantAccess();
-        return;
+      // Check for hsFormCallback with onFormSubmitted (standard HubSpot event)
+      if (data.type === 'hsFormCallback') {
+        if (data.eventName === 'onFormSubmitted' || data.eventName === 'onFormSubmit') {
+          console.log('Detected via hsFormCallback:', data.eventName);
+          showButton();
+          return;
+        }
       }
+
+      // Check for direct eventName (alternate format)
       if (data.eventName === 'onFormSubmitted' || data.eventName === 'onFormSubmit') {
-        grantAccess();
+        console.log('Detected via direct eventName');
+        showButton();
         return;
       }
-      if (data.meetingBookSucceeded || data.formSubmitted) {
-        grantAccess();
-        return;
-      }
+
+      // Check for nested data structure
       if (data.data?.eventName === 'onFormSubmitted') {
-        grantAccess();
+        console.log('Detected via nested data.eventName');
+        showButton();
+        return;
+      }
+
+      // Check for meeting/form success flags
+      if (data.meetingBookSucceeded || data.formSubmitted) {
+        console.log('Detected via success flags');
+        showButton();
         return;
       }
     };
 
     window.addEventListener('message', handleMessage);
 
-    // Poll for submission text - HubSpot form is in an iframe so MutationObserver may not catch it
-    const checkForSubmission = (): 'submitted' | 'not_submitted' => {
-      // Check the entire page for "Form submitted" text
-      const pageText = document.body.innerText || '';
+    // Track form state for size-change detection
+    let formLoaded = false;
+    let initialIframeHeight = 0;
+    let stableHeightCount = 0;
 
-      if (
-        pageText.includes('Form submitted') ||
-        pageText.includes('Thank you, we\'ll be in touch') ||
-        pageText.includes('Thank you,') ||
-        pageText.includes('we\'ll be in touch')
-      ) {
-        console.log('Detected submission via page text!');
-        return 'submitted';
-      }
+    const checkForSubmission = (): boolean => {
+      const container = document.querySelector('.hs-form-frame');
+      if (!container) return false;
 
-      // Check iframes for submission indicators
-      const iframes = document.querySelectorAll('iframe');
-      for (const iframe of iframes) {
-        try {
-          const iframeDoc = iframe.contentDocument || iframe.contentWindow?.document;
-          if (iframeDoc) {
-            const iframeText = iframeDoc.body?.innerText || '';
-            if (
-              iframeText.includes('Form submitted') ||
-              iframeText.includes('Thank you')
-            ) {
-              console.log('Detected submission via iframe text!');
-              return 'submitted';
-            }
+      const iframes = container.querySelectorAll('iframe');
+      if (iframes.length === 0) return false;
+
+      const iframe = iframes[0] as HTMLIFrameElement;
+      const currentHeight = iframe.offsetHeight || iframe.clientHeight;
+
+      // Wait for form to fully load (height stabilizes)
+      if (!formLoaded) {
+        if (currentHeight > 100) {
+          stableHeightCount++;
+          if (stableHeightCount >= 3) {
+            formLoaded = true;
+            initialIframeHeight = currentHeight;
+            console.log('HubSpot form loaded, initial height:', initialIframeHeight);
           }
-        } catch {
-          // Cross-origin iframe - expected
         }
+        return false;
       }
 
-      return 'not_submitted';
+      // After form is loaded, detect significant height change (submission shows thank you)
+      // Thank you message is typically much shorter than the form
+      const heightDifference = initialIframeHeight - currentHeight;
+      const heightRatio = currentHeight / initialIframeHeight;
+
+      // Form submitted if height decreased significantly (thank you message is smaller)
+      // OR if height changed by more than 30%
+      if (heightDifference > 100 || heightRatio < 0.7 || heightRatio > 1.5) {
+        console.log('Detected submission via height change:', {
+          initial: initialIframeHeight,
+          current: currentHeight,
+          ratio: heightRatio.toFixed(2)
+        });
+        return true;
+      }
+
+      return false;
     };
 
-    // Start polling after form has had time to load
+    // Poll for submission detection via size change
     const pollInterval = setInterval(() => {
-      const status = checkForSubmission();
-      if (status === 'submitted') {
-        // Show the continue button when form is submitted
-        setShowContinueButton(true);
+      if (checkForSubmission()) {
+        showButton();
         clearInterval(pollInterval);
       }
     }, 500);
 
-    // Hide loading spinner after a short delay
+    // Hide loading spinner after form loads
     const timer = setTimeout(() => {
       setIsLoading(false);
     }, 1500);
@@ -117,7 +144,7 @@ export function EmailGate({ onAccessGranted }: EmailGateProps) {
       clearInterval(pollInterval);
       clearTimeout(timer);
     };
-  }, [grantAccess]);
+  }, [grantAccess, showButton]);
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-100">
